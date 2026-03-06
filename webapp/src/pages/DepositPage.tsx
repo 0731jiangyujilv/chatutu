@@ -181,7 +181,8 @@ export function DepositPage() {
     <div className="min-h-screen p-4 pb-24 max-w-md mx-auto space-y-4">
       {/* Header */}
       <div className="text-center space-y-1">
-        <h1 className="text-xl font-bold">🎲 Chatutu</h1>
+        <img src="/logo.svg" alt="Chatutu Logo" className="w-32 h-20 object-contain mx-auto mb-2" />
+        <h1 className="text-xl font-bold">Chatutu</h1>
         <p className="text-xs text-tg-hint">Powered by Chainlink</p>
       </div>
 

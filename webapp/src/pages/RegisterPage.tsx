@@ -66,6 +66,7 @@ export function RegisterPage() {
       <div className="max-w-md mx-auto w-full flex-1 flex flex-col">
         {/* Header */}
         <div className="text-center mb-8 pt-4">
+          <img src="/logo.svg" alt="Chatutu Logo" className="w-32 h-20 object-contain mx-auto mb-4" />
           <h1 className="text-2xl font-bold mb-2">🔗 Connect Wallet</h1>
           <p className="text-tg-hint text-sm">
             Bet #{betId} — Link your wallet to participate
