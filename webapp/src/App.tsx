@@ -5,6 +5,7 @@ import { config } from '@/config/wagmi'
 import { HomePage } from '@/pages/HomePage'
 import { DepositPage } from '@/pages/DepositPage'
 import { RegisterPage } from '@/pages/RegisterPage'
+import { StatsPage } from '@/pages/StatsPage'
 
 const queryClient = new QueryClient()
 
@@ -17,6 +18,7 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/register/:betId" element={<RegisterPage />} />
             <Route path="/bet/:contractAddress" element={<DepositPage />} />
+            <Route path="/stats" element={<StatsPage />} />
           </Routes>
         </BrowserRouter>
       </QueryClientProvider>
