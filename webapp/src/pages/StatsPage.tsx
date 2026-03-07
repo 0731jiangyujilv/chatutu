@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ArrowUpIcon, ArrowDownIcon, TrendingUpIcon, ActivityIcon, HistoryIcon, DollarSignIcon } from 'lucide-react'
+import { createPublicClient, http, formatUnits } from 'viem'
+import { baseSepolia } from 'viem/chains'
 
 interface BetStats {
   activeBetsCount: number
@@ -48,7 +50,32 @@ interface PoRData {
 }
 
 const API_URL = import.meta.env.VITE_BOT_API_URL || 'http://localhost:3000'
-const CHATUTU_POR_ADDRESS = '0x5b73C5498c1E3b4dbA84de0F1833c4a029d90519' // ChatutuPoR on Base Sepolia
+const CHATUTU_POR_ADDRESS = '0x8540A5c408ad4a099025b8EB4549A75619e9A1f0' // ChatutuPoR on Base Sepolia
+
+const CHATUTU_POR_ABI = [
+  {
+    inputs: [],
+    name: 'getLatestData',
+    outputs: [
+      {
+        components: [
+          { name: 'totalBets', type: 'uint256' },
+          { name: 'activeBets', type: 'uint256' },
+          { name: 'settledBets', type: 'uint256' },
+          { name: 'totalVolume', type: 'uint256' },
+          { name: 'topPlayerProfit', type: 'uint256' },
+          { name: 'isValid', type: 'bool' },
+          { name: 'timestamp', type: 'uint256' },
+          { name: 'updateCount', type: 'uint256' },
+        ],
+        name: '',
+        type: 'tuple',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+] as const
 
 export function StatsPage() {
   const [stats, setStats] = useState<BetStats | null>(null)
@@ -76,17 +103,30 @@ export function StatsPage() {
         const data = await statsRes.json()
         setStats(data)
         
-        // 模拟 PoR 数据（待合约部署后从链上读取）
-        // TODO: 使用 wagmi/viem 从 ChatutuPoR 合约读取真实数据
+        // 从链上读取 PoR 数据
+        const client = createPublicClient({
+          chain: baseSepolia,
+          transport: http(),
+        })
+
+        const result = await client.readContract({
+          address: CHATUTU_POR_ADDRESS,
+          abi: CHATUTU_POR_ABI,
+          functionName: 'getLatestData',
+        })
+
+        console.log('PoR Data:', result)
+
         setPorData({
-          totalBets: data.totalBetsCount.toString(),
-          activeBets: data.activeBetsCount.toString(),
-          settledBets: data.settledBetsCount.toString(),
-          totalVolume: (parseFloat(data.totalVolume) * 1e18).toString(),
-          topPlayerProfit: '0',
-          isValid: true,
-          timestamp: Math.floor(Date.now() / 1000).toString(),
-          updateCount: '1',
+          totalBets: result.totalBets.toString(),
+          activeBets: result.activeBets.toString(),
+          settledBets: result.settledBets.toString(),
+          totalVolume: formatUnits(result.totalVolume, 18),
+          topPlayerProfit: formatUnits(result.topPlayerProfit, 18),
+          isValid: result.isValid,
+          // timestamp 是毫秒，需要除以 1000 转换为秒，然后再乘以 1000 转回毫秒给 Date
+          timestamp: new Date(Number(result.timestamp)).toLocaleString(),
+          updateCount: result.updateCount.toString(),
         })
       }
 
@@ -254,13 +294,13 @@ export function StatsPage() {
                   <div>
                     <div className="text-gray-400 text-xs mb-1">Total Volume (PoR)</div>
                     <div className="text-xl font-bold text-green-400">
-                      {(parseFloat(porData.totalVolume) / 1e18).toFixed(2)} USDC
+                      {parseFloat(porData.totalVolume).toFixed(2)} USDC
                     </div>
                   </div>
                   <div>
                     <div className="text-gray-400 text-xs mb-1">Last Update</div>
                     <div className="text-sm font-medium">
-                      {new Date(parseInt(porData.timestamp) * 1000).toLocaleString()}
+                      {porData.timestamp}
                     </div>
                   </div>
                 </div>

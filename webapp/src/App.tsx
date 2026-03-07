@@ -6,6 +6,7 @@ import { HomePage } from '@/pages/HomePage'
 import { DepositPage } from '@/pages/DepositPage'
 import { RegisterPage } from '@/pages/RegisterPage'
 import { StatsPage } from '@/pages/StatsPage'
+import { LeaderboardPage } from '@/pages/LeaderboardPage'
 
 const queryClient = new QueryClient()
 
@@ -19,6 +20,7 @@ function App() {
             <Route path="/register/:betId" element={<RegisterPage />} />
             <Route path="/bet/:contractAddress" element={<DepositPage />} />
             <Route path="/stats" element={<StatsPage />} />
+            <Route path="/leaderboard" element={<LeaderboardPage />} />
           </Routes>
         </BrowserRouter>
       </QueryClientProvider>
