@@ -1,78 +1,53 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-/// @title IBet - Interface for multi-side price bet contracts
-/// @notice Defines the external interface for a multi-player team-based price bet
+/// @title IBet - Interface for 1v1 price bet contracts
+/// @notice Defines the external interface for a simple 1v1 bet between two participants
 interface IBet {
     enum BetStatus {
-        Open,
+        Created,
         Locked,
         Settled,
         Cancelled
     }
 
-    enum Side {
-        Up,
-        Down
-    }
-
-    struct Position {
-        address player;
-        uint256 amount;
-    }
-
     struct BetInfo {
-        address creator;
+        address participant1;
+        address participant2;
         address token;
-        uint256 minAmount;
-        uint256 maxAmount;
+        uint256 amount;
         uint256 duration;
-        uint256 bettingDeadline;
         address priceFeed;
         int256 startPrice;
         int256 endPrice;
         uint256 startTime;
         uint256 endTime;
         BetStatus status;
-        Side winningSide;
-        bool isDraw;
-        uint256 totalUp;
-        uint256 totalDown;
+        address winner;
         uint256 feeBps;
         address feeRecipient;
     }
 
-    event BetPlaced(address indexed player, Side side, uint256 amount);
+    event Deposited(address indexed participant, uint256 amount);
     event BetLocked(int256 startPrice, uint256 startTime, uint256 endTime);
-    event BetSettled(Side winningSide, bool isDraw, int256 endPrice);
+    event BetSettled(address indexed winner, int256 endPrice);
     event BetCancelled();
-    event Claimed(address indexed player, uint256 payout);
-    event EmergencyWithdraw(address indexed player, uint256 amount);
+    event EmergencyWithdraw(address indexed participant, uint256 amount);
     event FeesCollected(address indexed recipient, uint256 amount);
 
     error InvalidStatus();
-    error BettingClosed();
-    error AlreadyPlaced();
-    error AmountTooLow();
-    error AmountTooHigh();
+    error NotParticipant();
+    error AlreadyDeposited();
+    error DepositTimeout();
     error BetNotExpired();
-    error BetNotSettled();
-    error NothingToClaim();
-    error AlreadyClaimed();
-    error NotAPlayer();
-    error OneSideEmpty();
-    error OracleStalePrice();
-    error OracleInvalidPrice();
     error TimelockNotExpired();
     error InvalidFee();
+    error OracleStalePrice();
+    error OracleInvalidPrice();
 
-    function placeBet(Side side, uint256 amount) external;
-    function lock() external;
+    function deposit() external;
     function settle() external;
     function cancel() external;
-    function claim() external;
     function emergencyWithdraw() external;
     function getBetInfo() external view returns (BetInfo memory);
-    function getUpPositions() external view returns (Position[] memory);
-    function getDownPositions() external view returns (Position[] memory);
 }
