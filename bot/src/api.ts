@@ -4,6 +4,12 @@ import { prisma } from "./db"
 import { getPriceFeed, createBetOnChain } from "./services/blockchain"
 import { bot } from "./bot"
 import { config } from "./config"
+import {
+  getOverallStats,
+  getActiveBets,
+  getHistoricalBets,
+  getActiveBetsWithWagers,
+} from "./services/stats"
 
 const USDC_ADDRESS = "0x036CbD53842c5426634e7929541eC2318f3dCF7e"
 
@@ -14,6 +20,40 @@ app.use(express.json())
 // Health check
 app.get("/health", (_req, res) => {
   res.json({ status: "ok" })
+})
+
+// Get overall statistics
+app.get("/api/stats", async (_req, res) => {
+  try {
+    const stats = await getOverallStats()
+    res.json(stats)
+  } catch (err) {
+    console.error("Stats error:", err)
+    res.status(500).json({ error: "Internal server error" })
+  }
+})
+
+// Get active bets with details
+app.get("/api/stats/active", async (_req, res) => {
+  try {
+    const { bets, totalWagered } = await getActiveBetsWithWagers()
+    res.json({ bets, totalWagered })
+  } catch (err) {
+    console.error("Active bets error:", err)
+    res.status(500).json({ error: "Internal server error" })
+  }
+})
+
+// Get historical bets
+app.get("/api/stats/history", async (req, res) => {
+  try {
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 20
+    const bets = await getHistoricalBets(limit)
+    res.json(bets)
+  } catch (err) {
+    console.error("History error:", err)
+    res.status(500).json({ error: "Internal server error" })
+  }
 })
 
 // Get bet by ID

@@ -10,7 +10,15 @@ import {
   betProposalMessage,
   parseConfirmMessage,
   noBetsMessage,
+  statsMessage,
+  activeBetsMessage,
+  historyMessage,
 } from "./messages"
+import {
+  getOverallStats,
+  getActiveBetsWithWagers,
+  getHistoricalBets,
+} from "./services/stats"
 
 export const bot = new Telegraf(config.TELEGRAM_BOT_TOKEN)
 
@@ -97,6 +105,36 @@ bot.command("mybets", async (ctx) => {
   }
 
   await ctx.replyWithMarkdown(lines.join("\n"))
+})
+
+// --- /stats ---
+bot.command("stats", async (ctx) => {
+  const stats = await getOverallStats()
+  await ctx.replyWithMarkdown(
+    statsMessage(
+      stats.activeBetsCount,
+      stats.totalBetsCount,
+      stats.totalVolume,
+      stats.settledBetsCount,
+      config.WEBAPP_URL
+    )
+  )
+})
+
+// --- /activebets ---
+bot.command("activebets", async (ctx) => {
+  const { bets, totalWagered } = await getActiveBetsWithWagers()
+  await ctx.replyWithMarkdown(
+    activeBetsMessage(bets, totalWagered, config.WEBAPP_URL)
+  )
+})
+
+// --- /history ---
+bot.command("history", async (ctx) => {
+  const bets = await getHistoricalBets(10)
+  await ctx.replyWithMarkdown(
+    historyMessage(bets, config.WEBAPP_URL)
+  )
 })
 
 // --- /bet or natural language ---

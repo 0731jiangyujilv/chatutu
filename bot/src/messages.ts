@@ -13,6 +13,7 @@ export function welcomeMessage(): string {
     "",
     "📋 *Commands:*",
     "/start — Welcome",
+    "/stat — Statistics",
     "/rules — Betting rules",
     "/mybets — My active bets",
     "/help — Help",
@@ -63,6 +64,12 @@ export function helpMessage(): string {
     "",
     "📊 *View bets:*",
     "/mybets — View your active bets",
+    "/stats — Platform statistics",
+    "/activebets — Current active bets",
+    "/history — Historical bet results",
+    "/topwinners — Top winners",
+    "/toplosers — Top losers",
+    "/topbets — Top bets",
   ].join("\n")
 }
 
@@ -161,4 +168,114 @@ export function parseConfirmMessage(intent: ParsedBetIntent): string {
 
 export function noBetsMessage(): string {
   return "📭 You have no active bets."
+}
+
+export function statsMessage(
+  activeBets: number,
+  totalBets: number,
+  totalVolume: string,
+  settledBets: number,
+  webappUrl: string
+): string {
+  return [
+    "📊 *Platform Statistics*",
+    "",
+    `🎲 Active Bets: ${activeBets}`,
+    `📈 Total Bets: ${totalBets}`,
+    `💰 Total Volume: ${parseFloat(totalVolume).toFixed(2)} USDC`,
+    `✅ Settled Bets: ${settledBets}`,
+    "",
+    `🌐 [View detailed stats](${webappUrl}/stats)`,
+  ].join("\n")
+}
+
+export function activeBetsMessage(
+  bets: Array<{ id: number; asset: string; amount: string; status: string; p1Username: string | null; p2Username: string | null }>,
+  totalWagered: string,
+  webappUrl: string
+): string {
+  if (bets.length === 0) {
+    return "📭 No active bets at the moment."
+  }
+
+  const lines = [
+    "🎲 *Active Bets*",
+    "",
+    `💰 Total Wagered: ${totalWagered} USDC`,
+    "",
+  ]
+
+  bets.slice(0, 5).forEach((bet) => {
+    const p1 = bet.p1Username || "Unknown"
+    const p2 = bet.p2Username || "Waiting..."
+    const statusEmoji =
+      bet.status === "PROPOSED" ? "📝" :
+      bet.status === "ACCEPTED" ? "✅" :
+      bet.status === "CREATED" ? "📄" :
+      bet.status === "DEPOSITING" ? "💳" :
+      bet.status === "LOCKED" ? "🔒" : "❓"
+    
+    lines.push(`${statusEmoji} #${bet.id} | ${bet.asset} | ${parseFloat(bet.amount).toFixed(2)} USDC`)
+    lines.push(`   @${p1} vs @${p2}`)
+  })
+
+  if (bets.length > 5) {
+    lines.push("")
+    lines.push(`... and ${bets.length - 5} more`)
+  }
+
+  lines.push("")
+  lines.push(`🌐 [View all active bets](${webappUrl}/stats)`)
+
+  return lines.join("\n")
+}
+
+export function historyMessage(
+  bets: Array<{
+    id: number
+    asset: string
+    amount: string
+    status: string
+    p1Username: string | null
+    p2Username: string | null
+    winnerUsername: string | null
+    startPrice: string | null
+    endPrice: string | null
+  }>,
+  webappUrl: string
+): string {
+  if (bets.length === 0) {
+    return "📭 No historical bets found."
+  }
+
+  const lines = [
+    "📜 *Bet History*",
+    "",
+  ]
+
+  bets.slice(0, 5).forEach((bet) => {
+    const p1 = bet.p1Username || "Unknown"
+    const p2 = bet.p2Username || "Unknown"
+    const winner = bet.winnerUsername || "Draw"
+    const statusEmoji = bet.status === "SETTLED" ? "✅" : "❌"
+    
+    lines.push(`${statusEmoji} #${bet.id} | ${bet.asset} | ${parseFloat(bet.amount).toFixed(2)} USDC`)
+    lines.push(`   @${p1} vs @${p2}`)
+    
+    if (bet.status === "SETTLED" && bet.startPrice && bet.endPrice) {
+      lines.push(`   $${bet.startPrice} → $${bet.endPrice} | Winner: @${winner}`)
+    } else {
+      lines.push(`   Status: ${bet.status}`)
+    }
+    lines.push("")
+  })
+
+  if (bets.length > 5) {
+    lines.push(`... and ${bets.length - 5} more`)
+    lines.push("")
+  }
+
+  lines.push(`🌐 [View full history](${webappUrl}/stats)`)
+
+  return lines.join("\n")
 }
