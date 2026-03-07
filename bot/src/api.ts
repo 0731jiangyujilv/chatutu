@@ -9,6 +9,7 @@ import {
   getActiveBets,
   getHistoricalBets,
   getActiveBetsWithWagers,
+  getLeaderboard,
 } from "./services/stats"
 
 const USDC_ADDRESS = "0x036CbD53842c5426634e7929541eC2318f3dCF7e"
@@ -52,6 +53,18 @@ app.get("/api/stats/history", async (req, res) => {
     res.json(bets)
   } catch (err) {
     console.error("History error:", err)
+    res.status(500).json({ error: "Internal server error" })
+  }
+})
+
+// Get leaderboard
+app.get("/api/stats/leaderboard", async (req, res) => {
+  try {
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 10
+    const leaderboard = await getLeaderboard(limit)
+    res.json(leaderboard)
+  } catch (err) {
+    console.error("Leaderboard error:", err)
     res.status(500).json({ error: "Internal server error" })
   }
 })

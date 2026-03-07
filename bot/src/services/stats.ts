@@ -130,3 +130,62 @@ export async function getActiveBetsWithWagers(): Promise<{
     totalWagered: totalWagered.toFixed(2),
   }
 }
+
+export interface LeaderboardEntry {
+  username: string
+  wins: number
+  losses: number
+  totalProfit: string
+  winRate: number
+  totalBets: number
+}
+
+export async function getLeaderboard(limit: number = 10): Promise<LeaderboardEntry[]> {
+  const users = await prisma.user.findMany({
+    include: {
+      wins: {
+        where: { status: "SETTLED" },
+      },
+      betsAsP1: {
+        where: { status: "SETTLED" },
+      },
+      betsAsP2: {
+        where: { status: "SETTLED" },
+      },
+    },
+  })
+
+  const leaderboard = users
+    .map((user) => {
+      const wins = user.wins.length
+      const allBets = [...user.betsAsP1, ...user.betsAsP2]
+      const settledBets = allBets.filter((bet) => bet.status === "SETTLED")
+      const losses = settledBets.filter((bet) => bet.winnerTgId !== user.tgId && bet.winnerTgId !== null).length
+      const totalBets = settledBets.length
+
+      const totalProfit = settledBets.reduce((profit, bet) => {
+        if (bet.winnerTgId === user.tgId) {
+          return profit + parseFloat(bet.amount.toString())
+        } else if (bet.winnerTgId !== null) {
+          return profit - parseFloat(bet.amount.toString())
+        }
+        return profit
+      }, 0)
+
+      const winRate = totalBets > 0 ? (wins / totalBets) * 100 : 0
+
+      return {
+        username: user.username || `User${user.tgId}`,
+        wins,
+        losses,
+        totalProfit: totalProfit.toFixed(2),
+        winRate: parseFloat(winRate.toFixed(2)),
+        totalBets,
+      }
+    })
+    .filter((entry) => entry.totalBets > 0)
+    .sort((a, b) => parseFloat(b.totalProfit) - parseFloat(a.totalProfit))
+    .slice(0, limit)
+
+  return leaderboard
+}

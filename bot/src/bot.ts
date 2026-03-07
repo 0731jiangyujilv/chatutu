@@ -13,11 +13,13 @@ import {
   statsMessage,
   activeBetsMessage,
   historyMessage,
+  leaderboardMessage,
 } from "./messages"
 import {
   getOverallStats,
   getActiveBetsWithWagers,
   getHistoricalBets,
+  getLeaderboard,
 } from "./services/stats"
 
 export const bot = new Telegraf(config.TELEGRAM_BOT_TOKEN)
@@ -134,6 +136,14 @@ bot.command("history", async (ctx) => {
   const bets = await getHistoricalBets(10)
   await ctx.replyWithMarkdown(
     historyMessage(bets, config.WEBAPP_URL)
+  )
+})
+
+// --- /ranking ---
+bot.command("ranking", async (ctx) => {
+  const leaderboard = await getLeaderboard(10)
+  await ctx.replyWithMarkdown(
+    leaderboardMessage(leaderboard, config.WEBAPP_URL)
   )
 })
 

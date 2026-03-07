@@ -54,22 +54,14 @@ export function helpMessage(): string {
     "",
     "🗣 *Natural language bets:*",
     "Mention me in a group chat with your bet description:",
-    '• `@chatutu_bot bet @user 100 BTC 5m up`',
-    '• `@chatutu_bot bet @user 50 LINK 1h down`',
-    "",
-    "AI will parse your intent and confirm the parameters.",
-    "",
-    "💳 *Wallet connection:*",
-    "Tap the Deposit button to open the WebApp and connect your wallet.",
-    "",
-    "📊 *View bets:*",
     "/mybets — View your active bets",
+    "/help — Show this help",
+    "",
+    "*Statistics Commands:*",
     "/stats — Platform statistics",
     "/activebets — Current active bets",
     "/history — Historical bet results",
-    "/topwinners — Top winners",
-    "/toplosers — Top losers",
-    "/topbets — Top bets",
+    "/ranking — Profit leaderboard",
   ].join("\n")
 }
 
@@ -276,6 +268,42 @@ export function historyMessage(
   }
 
   lines.push(`🌐 [View full history](${webappUrl}/stats)`)
+
+  return lines.join("\n")
+}
+
+export function leaderboardMessage(
+  leaderboard: Array<{
+    username: string
+    wins: number
+    losses: number
+    totalProfit: string
+    winRate: number
+    totalBets: number
+  }>,
+  webappUrl: string
+): string {
+  if (leaderboard.length === 0) {
+    return "📭 No leaderboard data available yet."
+  }
+
+  const lines = [
+    "🏆 *Profit Leaderboard*",
+    "",
+  ]
+
+  leaderboard.forEach((entry, index) => {
+    const medal = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `${index + 1}.`
+    const profit = parseFloat(entry.totalProfit)
+    const profitEmoji = profit > 0 ? "📈" : profit < 0 ? "📉" : "➖"
+    
+    lines.push(`${medal} @${entry.username}`)
+    lines.push(`   ${profitEmoji} Profit: ${entry.totalProfit} USDC`)
+    lines.push(`   📊 W/L: ${entry.wins}/${entry.losses} (${entry.winRate.toFixed(1)}%)`)
+    lines.push("")
+  })
+
+  lines.push(`🌐 [View full leaderboard](${webappUrl}/stats)`)
 
   return lines.join("\n")
 }
